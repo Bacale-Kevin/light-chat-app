@@ -10,7 +10,17 @@ export async function POST(request: Request) {
     const { name, email, password } = body;
 
     if (!email || !name || !password) {
-      return new NextResponse("Invalid Login Credentials", { status: 400 });
+      return new NextResponse("All fields are required", { status: 400 });
+    }
+
+    const userExist = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (userExist) {
+      return new NextResponse("Account exist please login instead!", { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
