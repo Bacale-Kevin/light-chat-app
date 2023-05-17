@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import Button from "@/app/components/Button";
 import Input from "@/app/components/inputs/Input";
 import { useCallback, useState } from "react";
@@ -33,11 +34,17 @@ const AuthForm = () => {
     },
   });
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
 
     if (variant === "REGISTER") {
-      // Axios Register
+      await axios
+        .post("/api/register", data)
+        .then(() => {})
+        .catch((error) => {})
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
 
     if (variant === "LOGIN") {
