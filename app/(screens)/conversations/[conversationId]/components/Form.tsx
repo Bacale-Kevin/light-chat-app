@@ -12,7 +12,6 @@ const Form = () => {
   const {
     register,
     handleSubmit,
-    reset,
     setValue,
     formState: { errors },
   } = useForm<FieldValues>({
@@ -23,7 +22,6 @@ const Form = () => {
 
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
     setValue("message", "", { shouldValidate: true }); // clears input after validation
-    reset()
 
     axios.post("/api/messages", { ...data, conversationId: conversationId });
   };
