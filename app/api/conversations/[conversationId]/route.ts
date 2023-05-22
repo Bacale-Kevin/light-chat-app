@@ -16,7 +16,8 @@ export async function DELETE(request: Request, { params }: { params: IParams }) 
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const existingConversatin = await prisma.conversation.findUnique({
+    // ExistingConversatin will be used by Pusher for real-time commmunication
+    const existingConversation = await prisma.conversation.findUnique({
       where: {
         id: conversationId,
       },
@@ -25,7 +26,7 @@ export async function DELETE(request: Request, { params }: { params: IParams }) 
       },
     });
 
-    if (!existingConversatin) {
+    if (!existingConversation) {
       return new NextResponse("Invalid ID", { status: 400 });
     }
 
