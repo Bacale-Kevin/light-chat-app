@@ -5,11 +5,12 @@ import { FullMessageType } from "@/app/types";
 import { useEffect, useRef, useState } from "react";
 import MessageBox from "./MessageBox";
 import axios from "axios";
+import { pusherClient } from "@/app/libs/pusher";
+import { find } from "lodash";
 
 interface BodyProps {
   initialMessages: FullMessageType[];
 }
-
 
 const Body: React.FC<BodyProps> = ({ initialMessages }) => {
   const [messages, setMessages] = useState(initialMessages);
@@ -18,7 +19,36 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
   const { conversationId } = useConversation();
 
   useEffect(() => {
-    axios.post(`/api/conversations/${conversationId}/seen`);
+    axios.post(`/api/conversations/${conversationId}/seen`); // send messages are marked as seen automatically by the sender
+  }, [conversationId]);
+
+  useEffect(() => {
+    pusherClient.subscribe(conversationId); //the channel is the conversation ID
+    bottomRef?.current?.scrollIntoView(); // scroll down to the latest message
+
+    const messageHandler = (message: FullMessageType) => {
+      axios.post(`/api/conversations/${conversationId}/seen`); // alert everyone that the message has been seen!
+
+      setMessages((current) => {
+        // no new message return the original message avoid duplicates
+        if (find(current, { id: message.id })) {
+          return current;
+        }
+
+        // update the array with the new message
+        return [...current, message];
+      });
+
+      bottomRef?.current?.scrollIntoView();
+    };
+
+    pusherClient.bind("messages:new", messageHandler);
+
+    //Unbind and unsubscribe everytime component unmounts
+    return () => {
+      pusherClient.unsubscribe(conversationId);
+      pusherClient.unbind("messages:new", messageHandler);
+    };
   }, [conversationId]);
 
   return (
