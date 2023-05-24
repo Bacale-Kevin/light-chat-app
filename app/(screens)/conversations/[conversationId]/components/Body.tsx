@@ -30,7 +30,7 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
       axios.post(`/api/conversations/${conversationId}/seen`); // alert everyone that the message has been seen!
 
       setMessages((current) => {
-        // no new message return the original message avoid duplicates
+        // no new message return the original message and avoid duplicates
         if (find(current, { id: message.id })) {
           return current;
         }
@@ -42,12 +42,26 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
       bottomRef?.current?.scrollIntoView();
     };
 
+    const updateMessageHandler = (newMessage: FullMessageType) => {
+      setMessages((current) =>
+        current.map((currentMessage) => {
+          if (currentMessage.id === newMessage.id) {
+            return newMessage;
+          }
+
+          return currentMessage;
+        })
+      );
+    };
+
     pusherClient.bind("messages:new", messageHandler);
+    pusherClient.bind("message:update", updateMessageHandler);
 
     //Unbind and unsubscribe everytime component unmounts
     return () => {
       pusherClient.unsubscribe(conversationId);
       pusherClient.unbind("messages:new", messageHandler);
+      pusherClient.unbind("message:update", updateMessageHandler);
     };
   }, [conversationId]);
 
